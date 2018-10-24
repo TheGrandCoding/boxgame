@@ -18,6 +18,9 @@ public class GameScript : MonoBehaviour {
     public Material BlueMat;
     public Material Highlighted;
 
+    public Material DarkRed;
+    public Material DarkBlue;
+
     public class GameBlock
     {
         public GameObject North;
@@ -80,10 +83,10 @@ public class GameScript : MonoBehaviour {
             Material mat = scrp.NotOwned;
             if(play == WhoPlayer.Player1)
             {
-                mat = scrp.RedMat;
+                mat = scrp.DarkRed;
             } else if (play == WhoPlayer.Player2)
             {
-                mat = scrp.BlueMat;
+                mat = scrp.DarkBlue;
             } 
             if(play == WhoPlayer.None)
             {
