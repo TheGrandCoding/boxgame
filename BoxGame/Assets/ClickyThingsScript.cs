@@ -74,5 +74,28 @@ public class ClickyThingsScript : MonoBehaviour {
         }
     }
 
+    void OnMouseUp()
+    {
+        if(this.OwnedBy == GameScript.WhoPlayer.None)
+        {
+            this.OwnedBy = GameScript.CurrentPlayerGo;
+            if(this.OwnedBy == GameScript.WhoPlayer.Player1)
+            {
+                GameScript.CurrentPlayerGo = GameScript.WhoPlayer.Player2;
+                this.GetComponent<Renderer>().material = Red;
+            }
+            else
+            {
+                GameScript.CurrentPlayerGo = GameScript.WhoPlayer.Player1;
+                this.GetComponent<Renderer>().material = Blue;
+            }
+            foreach(var b in PartOfBlocks)
+            {
+                b.SetBlockOwned(new Vector3(X, Y, Z), this.OwnedBy);
+            }
+        }
+        Debug.LogError(string.Format("Clicked ({0}, {1}, {2}) with {3} blocks", X, Y, Z, PartOfBlocks.Count));
+    }
+
 
 }

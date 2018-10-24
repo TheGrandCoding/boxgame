@@ -5,8 +5,13 @@ using System.Linq;
 
 public class GameScript : MonoBehaviour {
 
+    public static WhoPlayer CurrentPlayerGo = WhoPlayer.Player1;
+    public static int Player1Amount = 0;
+    public static int Player2Amount = 0;
+
     public GameObject StartEmpty;
     public GameObject Cube;
+    public GameObject CoverCube;
 
     public Material RedMat;
     public Material NotOwned;
@@ -30,6 +35,38 @@ public class GameScript : MonoBehaviour {
         public GameObject Cover; // thing that goes on top
         public WhoPlayer PlayerOwned = WhoPlayer.None;
 
+        public ClickyThingsScript[] ScriptsWhichAreOwned(bool owned)
+        {
+            return Scripts.Where(x => x.OwnedBy != WhoPlayer.None && owned).ToArray();
+        }
+
+        public int NumForPlayer1 = 0;
+        public int NumForPlayer2 = 0;
+        public void SetBlockOwned(Vector3 vec, WhoPlayer which)
+        {
+            if(which == WhoPlayer.Player1)
+            {
+                NumForPlayer1++;
+                Debug.LogFormat("{0} owned, {1} total", ScriptsWhichAreOwned(true).Count(), Cubes.Count());
+                if(ScriptsWhichAreOwned(true).Count() == Cubes.Count())
+                { // they just added the last thing
+                    GameScript.Player1Amount++;
+                    GameScript.CurrentPlayerGo = WhoPlayer.Player1;
+                    SetPlayer(WhoPlayer.Player1);
+                }
+            } else
+            {
+                NumForPlayer2++;
+                if (ScriptsWhichAreOwned(true).Count() == Cubes.Count())
+                { // they just added the last thing
+                    GameScript.CurrentPlayerGo = WhoPlayer.Player2;
+                    GameScript.Player2Amount++;
+                    SetPlayer(WhoPlayer.Player2);
+                }
+            }
+            Debug.LogWarningFormat("{0} vs {1}", Player1Amount, Player2Amount);
+        }
+
         public Vector2 Position;
         public GameBlock(int x, int y)
         {
@@ -48,10 +85,17 @@ public class GameScript : MonoBehaviour {
             {
                 mat = scrp.BlueMat;
             } 
-            North.GetComponent<Renderer>().material = mat;
-            East.GetComponent<Renderer>().material = mat;
-            South.GetComponent<Renderer>().material = mat;
-            West.GetComponent<Renderer>().material = mat;
+            if(play == WhoPlayer.None)
+            {
+                North.GetComponent<Renderer>().material = mat;
+                East.GetComponent<Renderer>().material = mat;
+                South.GetComponent<Renderer>().material = mat;
+                West.GetComponent<Renderer>().material = mat;
+            } else
+            {
+                Cover.GetComponent<Renderer>().enabled = true;
+                Cover.GetComponent<Renderer>().material = mat;
+            }
         }
     }
     public enum WhoPlayer
@@ -213,10 +257,20 @@ public class GameScript : MonoBehaviour {
         foreach (var bl in allBlocks)
         {
             bl.SetPlayer(WhoPlayer.None);
-            foreach(var cb in bl.Scripts)
+            float totalX = 0;
+            float totalZ = 0; // actual x and Z
+            // we need the average to get the centre place.
+            foreach (var cb in bl.Scripts)
             {
+                totalX += cb.gameObject.transform.localPosition.x;
+                totalZ += cb.gameObject.transform.localPosition.z;
                 cb.Init(Highlighted, RedMat, BlueMat, NotOwned, bl);
             }
+            var cover = Instantiate(CoverCube);
+            cover.transform.SetParent(StartEmpty.transform);
+            cover.transform.localPosition = new Vector3(totalX / 4, 0.5f, totalZ / 4);
+            bl.Cover = cover;
+            cover.GetComponent<Renderer>().enabled = false; // hide it
         }
     }
 
